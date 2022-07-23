@@ -17,10 +17,10 @@ int pwr=8;
 //dRampTemp is the temperature decrement per period for cooldown.  For instant cool down, rather than a phased (periodic) cool down, then set to a number greater than the difference between holdTemp and startTemp.
 int startPeriod=0;
 int startTemp=100;
-int uRampTemp=25;
+int uRampTemp=20;
 int holdTemp=400;
 int holdPeriod=5;
-int dRampTemp=25;
+int dRampTemp=20;
 
 //Create period length (3600000UL = 1hr)
 long pCount=3600000UL;
