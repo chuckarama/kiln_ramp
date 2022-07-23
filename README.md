@@ -7,3 +7,5 @@ http://www.pugetsoundknappers.com/how_to/Heat%20Treating%20Guide%20with%20Table.
 My setup is a simple MAX6675 thermocouple reader and a zero crossing solid state relay to turn on the kiln power.
 
 There is no reason this shouldn't work for knappers out there using turkey roasters as well.
+
+Demonstration video:  https://youtu.be/Y11y6WhBYUg
