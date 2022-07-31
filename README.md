@@ -9,3 +9,12 @@ My setup is a simple MAX6675 thermocouple reader and a zero crossing solid state
 There is no reason this shouldn't work for knappers out there using turkey roasters as well.
 
 Demonstration video:  https://youtu.be/Y11y6WhBYUg
+
+
+
+Changelog:
+----------
+
+20220730
+- Added parameters for soaking (hold) of the warm-up cycle
+- Changed soaking (hold) parameters to double for portioning of a period.
