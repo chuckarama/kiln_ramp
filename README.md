@@ -15,6 +15,10 @@ Demonstration video:  https://youtu.be/Y11y6WhBYUg
 Changelog:
 ----------
 
+20220731
+- Changed parameter names to more closely match common kiln nomenclature
+- Added safety catch for mismatch upRampTemp to final soakTemp
+
 20220730
 - Added parameters for soaking (hold) of the warm-up cycle
 - Changed soaking (hold) parameters to double for portioning of a period.
