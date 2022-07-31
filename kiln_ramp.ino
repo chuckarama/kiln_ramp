@@ -10,18 +10,18 @@ MAX6675 thermocouple(thermoCLK, thermoCS, thermoDO);
 int pwr=8;
 
 //startPeriod should usually be left at 0
-//startTemp is warm-up temperature to begin from.  Careful not to set higher than you can get to in one period.
-//startHoldPeriod The amount of periods to soak the warmup.  (The .34 default, at the defaut period length, is 20 mins)
-//uRampTemp is the temperature increment that will be added each period till reaching holdTemp.  Careful not to set higher than you can achieve in a single period.
-//holdTemp is the maximum temperature you want to achieve
-//holdPeriod is the amount of periods you want to hold at the maximum temp (holdTemp)
-//dRampTemp is the temperature decrement per period for cooldown.  For instant cool down, rather than a phased (periodic) cool down, then set to a number greater than the difference between holdTemp and startTemp.
+//warmupTemp is warm-up temperature to begin from.  Careful not to set higher than you can get to in one period.
+//warmupSoakPeriod The amount of periods to soak the warmup.  (The .34 default, at the defaut period length, is 20 mins)   This is useful if you have rocks that need to dry a little bit before proceeding, or that are sensitive to thermal shock.
+//uRampTemp is the temperature increment that will be added each period till reaching soakTemp.  Careful not to set higher than you can achieve in a single period.
+//soakTemp is the maximum temperature you want to achieve
+//soakPeriod is the amount of periods you want to hold at the maximum temp (soakTemp)
+//dRampTemp is the temperature decrement per period for cooldown.  For instant cool down, rather than a phased (periodic) cool down, then set to a number greater than the difference between soakTemp and warmupTemp.
 int startPeriod=0;
-int startTemp=100;
-double startHoldPeriod=.34;
+int warmupTemp=100;
+double warmupSoakPeriod=.34;
 int upRampTemp=25;
-int holdTemp=400;
-double holdPeriod=5;
+int soakTemp=390;
+double soakPeriod=5;
 int downRampTemp=20;
 
 //Create period length (3600000UL = 1hr)
@@ -30,14 +30,14 @@ long pCount=3600000UL;
 //long pCount=1000UL;
 
 //Set the first temp
-int tSet=startTemp;
+int tSet=warmupTemp;
 
 //Calculate start holding period
-long startHoldSec = pCount*startHoldPeriod;
+long startHoldSec = pCount*warmupSoakPeriod;
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("Kiln Temp Controller - 400x4hrs 21+hr runtime");
+  Serial.println("Chuck Roast 3000 Kiln Temp Controller");
 
   //Configure the power PIN and turn it off to start
   pinMode(pwr,OUTPUT);
@@ -48,9 +48,9 @@ void setup() {
     
   //Warm it up to starting temp
   Serial.print("Warming up to ");
-  Serial.println(startTemp);
+  Serial.println(warmupTemp);
   int currTemp = thermocouple.readFahrenheit();
-  while(currTemp < startTemp){
+  while(currTemp < warmupTemp){
     digitalWrite(pwr,HIGH);
     delay(10000);
     currTemp = thermocouple.readFahrenheit();
@@ -67,15 +67,15 @@ void setup() {
     
     //Hold the warm-up soak temp for the assigned period
     while(startHoldSec > 0){
-      if(currTemp < startTemp){
+      if(currTemp < warmupTemp){
         digitalWrite(pwr,HIGH);
       }else{
         digitalWrite(pwr,LOW);
       }
       startHoldSec-=10000;
+      printData(startHoldSec/1000, tSet, digitalRead(pwr), currTemp);
       delay(10000);
       int currTemp=thermocouple.readFahrenheit();
-      printData(startHoldSec/1000, tSet, digitalRead(pwr), currTemp);
     }
   }
 }
@@ -87,24 +87,29 @@ void loop() {
    unsigned long currPeriod=millis()/pCount;
 
    //Check if we're in a new period and adjust settings
-   //We'll stop adjusting the tempSet when we drop below the original startTemp 
-   if(currPeriod+1 > startPeriod and tSet>=startTemp){
+   //We'll stop adjusting the tempSet when we drop below the original warmupTemp 
+   if(currPeriod+1 > startPeriod and tSet>=warmupTemp){
      startPeriod++;
      //If we've reached targeted hold period, remove a hold period from the count
      //Else If there are no more hold periods decrease the temperature set by dRampTemp
      //Else increase the temperature set by uRampTemp
-     if(tSet==holdTemp and holdPeriod>0){
-       tSet=holdTemp;
-       holdPeriod--;
-     }else if(holdPeriod==0){
+     if(tSet==soakTemp and soakPeriod>0){
+       tSet=soakTemp;
+       soakPeriod--;
+     }else if(soakPeriod==0){
        tSet=tSet-downRampTemp;
      }else{
        tSet=tSet+upRampTemp;
-       //If we've reached the target hold temp, this is the first period and well remove a holdPeriod count
-       if(tSet==holdTemp){
-         holdPeriod--;
+       //If we've reached the target hold temp, this is the first period and well remove a soakPeriod count
+       if(tSet==soakTemp){
+         soakPeriod--;
        }
      }      
+   }
+
+   //safety catch for if the user has mismatched upRampTemp increments and soakTemp maximum temp, as our example settings do (25 upRampTemp will overshoot soakTemp)
+   if(tSet>=soakTemp){
+     tSet=soakTemp;
    }
 
    //Check the temp and compare to the current setting - turn power ((relay) on or off accordingly
