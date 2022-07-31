@@ -11,16 +11,18 @@ int pwr=8;
 
 //startPeriod should usually be left at 0
 //startTemp is warm-up temperature to begin from.  Careful not to set higher than you can get to in one period.
+//startHoldPeriod The amount of periods to soak the warmup.  (The .34 default, at the defaut period length, is 20 mins)
 //uRampTemp is the temperature increment that will be added each period till reaching holdTemp.  Careful not to set higher than you can achieve in a single period.
 //holdTemp is the maximum temperature you want to achieve
 //holdPeriod is the amount of periods you want to hold at the maximum temp (holdTemp)
 //dRampTemp is the temperature decrement per period for cooldown.  For instant cool down, rather than a phased (periodic) cool down, then set to a number greater than the difference between holdTemp and startTemp.
 int startPeriod=0;
 int startTemp=100;
-int uRampTemp=20;
+double startHoldPeriod=.34;
+int upRampTemp=25;
 int holdTemp=400;
-int holdPeriod=5;
-int dRampTemp=20;
+double holdPeriod=5;
+int downRampTemp=20;
 
 //Create period length (3600000UL = 1hr)
 long pCount=3600000UL;
@@ -29,6 +31,9 @@ long pCount=3600000UL;
 
 //Set the first temp
 int tSet=startTemp;
+
+//Calculate start holding period
+long startHoldSec = pCount*startHoldPeriod;
 
 void setup() {
   Serial.begin(9600);
@@ -40,12 +45,38 @@ void setup() {
 
   //stabilize for a sec
   delay(1000);
-
+    
   //Warm it up to starting temp
-  while(thermocouple.readFahrenheit() < startTemp){
+  Serial.print("Warming up to ");
+  Serial.println(startTemp);
+  int currTemp = thermocouple.readFahrenheit();
+  while(currTemp < startTemp){
     digitalWrite(pwr,HIGH);
     delay(10000);
-    printData(startPeriod, tSet, digitalRead(pwr), thermocouple.readFahrenheit());
+    currTemp = thermocouple.readFahrenheit();
+    printData(startPeriod, tSet, digitalRead(pwr), currTemp);
+  }
+
+  //Check to see if a warm-up soak time is set
+  if(startHoldSec > 0){
+    Serial.print("Warm-up soaking for ");
+    Serial.print(startHoldSec/1000/60);
+    Serial.print(" minutes (");
+    Serial.print(startHoldSec/1000);
+    Serial.println(" seconds)");
+    
+    //Hold the warm-up soak temp for the assigned period
+    while(startHoldSec > 0){
+      if(currTemp < startTemp){
+        digitalWrite(pwr,HIGH);
+      }else{
+        digitalWrite(pwr,LOW);
+      }
+      startHoldSec-=10000;
+      delay(10000);
+      int currTemp=thermocouple.readFahrenheit();
+      printData(startHoldSec/1000, tSet, digitalRead(pwr), currTemp);
+    }
   }
 }
 
@@ -66,9 +97,9 @@ void loop() {
        tSet=holdTemp;
        holdPeriod--;
      }else if(holdPeriod==0){
-       tSet=tSet-dRampTemp;
+       tSet=tSet-downRampTemp;
      }else{
-       tSet=tSet+uRampTemp;
+       tSet=tSet+upRampTemp;
        //If we've reached the target hold temp, this is the first period and well remove a holdPeriod count
        if(tSet==holdTemp){
          holdPeriod--;
@@ -90,7 +121,7 @@ void loop() {
    delay(10000);
 }
 
-void printData(int period, int tempSet, int power, int temp){
+void printData(long period, int tempSet, int power, int temp){
   Serial.print("period:");
   Serial.print(period);
   Serial.print("|tSet:");
