@@ -15,6 +15,10 @@ Demonstration video:  https://youtu.be/Y11y6WhBYUg
 Changelog:
 ----------
 
+20220808
+- Added parameter (tempType) for Celsius or Fahrenheit temperature and readings
+- Added function (readAvgTemp) to remove "flutter" in MAX6675 readings.  Temp moving average calculated by 24 readings over 5 seconds
+
 20220731
 - Changed parameter names to more closely match common kiln nomenclature
 - Added safety catch for mismatch upRampTemp to final soakTemp
