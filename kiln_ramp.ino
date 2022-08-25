@@ -28,8 +28,8 @@ double soakPeriod=5;
 int downRampTemp=20;
 
 //Create period length (3600000UL = 1hr)
-//long pCount=3600000UL;
-long pCount=10000UL;
+long pCount=3600000UL;
+//long pCount=10000UL;
 //long pCount=1000UL;
 
 //Set the first temp
