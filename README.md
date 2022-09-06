@@ -10,10 +10,20 @@ There is no reason this shouldn't work for knappers out there using turkey roast
 
 Demonstration video:  https://youtu.be/Y11y6WhBYUg
 
+kiln_ramp_2:
+A seperate version "kiln_ramp_2" represents a more versatile (albeit more verbose code) state management.  The original still retains some value as a small and simple version, so it has been left in that form.  Additionally in "kiln_ramp_2" an OLED SH1106 display functionality has been added and can easiy be enabled/disabled (Default:Disabled).  A reconfiguration of the Serial monitor output allows it to be enabled/disabled (Default:Enabled).  The OLED GFX library is especially "hefty" and consumes a lot of memory.  Enabling both the Serial and OLED will consume excessive amounts of memory and some output (both Serial and OLED) information seems to suffer.
+
 
 
 Changelog:
 ----------
+
+20220905
+- Added second version "kiln_ramp_2" (see description above)
+- _2 added OLED support
+- _2 Enable/Disable Serial Monitor
+- _2 Enable/Disable OLED dispaly0
+- _2 Added more versatile state management scheme
 
 20220808
 - Added parameter (tempType) for Celsius or Fahrenheit temperature and readings
