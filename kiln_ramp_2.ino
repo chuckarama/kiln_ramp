@@ -14,15 +14,15 @@ MAX6675 thermocouple(thermoCLK, thermoCS, thermoDO);
 
 //warmupTemp is warm-up temperature to begin from.  Careful not to set higher than you can get to in one period.
 #define warmupTemp 100
-//warmupSoakPeriod The amount of periods to soak the warmup.  (The .34 default, at the defaut period length, is 20 mins)   This is useful if you have rocks that need to dry a little bit before proceeding, or that are sensitive to thermal shock.
+//warmupSoakPeriod The amount of periods to soak at the warmup temp.  Useful for drying rocks before making steam or for rocks sensitive to thermal shock.
 #define warmupSoakPeriod .34
-//upRampTemp is the temperature increment that will be added each period till reaching soakTemp.  Careful not to set higher than you can achieve in a single period.
+//upRampTemp is the temperature increment that will be added each period till reaching soakTemp.  This allows you to carefully (or dangerously) creep up to final temp.
 #define upRampTemp 25
-//soakTemp is the maximum temperature you want to achieve
+//soakTemp is the maximum temperature you want to achieve.
 #define soakTemp 290
 //soakPeriod is the amount of periods you want to hold at the maximum temp (soakTemp)
 #define soakPeriod 5
-//downRampTemp is the temperature decrement per period for cooldown.  For instant cool down, rather than a phased (periodic) cool down, then set to a number greater than the difference between soakTemp and warmupTemp.
+//downRampTemp is the temperature decrement per period for cooldown.  Some kilns/ovens cool faster than others and this can control a steady and slow cool down.
 #define downRampTemp 20
 
 //Create period length (3600000UL = 1hr)
@@ -43,7 +43,7 @@ MAX6675 thermocouple(thermoCLK, thermoCS, thermoDO);
 #define debugln(x)
 #endif
 
-//Turn on/off the OLED display. If you have one and want to use it, change OLED 0 to OLED1 and adjust your SCREEN_WIDTH and SCREEN_HEIGHT
+//Turn on/off the OLED display. If you have one and want to use it, adjust your SCREEN_WIDTH and SCREEN_HEIGHT values
 //Note that a display is extremely useful here, but the GFX library is a resource hog, likely to fill ~50% of your arduino memory.
 //Also note that this setup is for the SH1106 OLED.
 //You'll need to connect to the proper i2c interface and perhaps change the address of your OLED i2c
@@ -113,7 +113,7 @@ int readAvgTemp(){
   static unsigned long readMillis = currTime;
 
     if (currTime - readMillis >= 250) {
-       const float mov_avg_alpha = 0.1;
+        const double mov_avg_alpha = 0.1;
         double value;
         if(tempType == 'F' or tempType == 'f'){
           value=thermocouple.readFahrenheit();
@@ -121,7 +121,7 @@ int readAvgTemp(){
           value=thermocouple.readCelsius();
         }
     
-        if(mov_avg == -10) mov_avg=value;
+        if(mov_avg == 0) mov_avg=value;
         
         mov_avg = mov_avg_alpha * value + (1 - mov_avg_alpha) * mov_avg;
         readMillis = currTime;
