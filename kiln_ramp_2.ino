@@ -132,12 +132,13 @@ int readAvgTemp(){
 
 void stateCheck(int currTemp){
   enum class cookState : uint8_t {
-        WARMUP,      // defaults to 0
-        WARMSOAK,    // defaults to 1
-        UPRAMP,   // defaults to 2
-        SOAK, // defaults to 3
-        DOWNRAMP, // defaults to 4
-        DONE, // defaults to 5
+        WARMUP = 0,
+        WARMSOAK = 1,
+        UPRAMP = 2,
+        SOAK = 3,
+        DOWNRAMP = 4,
+        DONE = 5,
+        ERRORSTATE= 6,
    };
 
    unsigned long currTime = millis();
@@ -148,7 +149,7 @@ void stateCheck(int currTemp){
    static int period = 0;
    static int startPeriod = 0;
    static bool changePeriod = false;
-   static String currPhase = "WarmUp";
+   //static String currPhase = "WarmUp";
    static int tempStatus = 0;
    static bool changeStatus = false;
    static bool powerStatus = false;
@@ -157,7 +158,6 @@ void stateCheck(int currTemp){
       case cookState::WARMUP:
         if(currTemp >= warmupTemp){
           currState = cookState::WARMSOAK;
-          currPhase = "WarmSoak";
           currStateStart = currTime;
           startPeriod = 1;
           startTime = currTime;
@@ -169,7 +169,6 @@ void stateCheck(int currTemp){
       case cookState::WARMSOAK:
         if(currTime - currStateStart >= (warmupSoakPeriod*pCount)){
           currState = cookState::UPRAMP;
-          currPhase = "UpRamp";
           currStateStart = currTime;
           startPeriod = period;
           changeStatus = true;
@@ -182,7 +181,6 @@ void stateCheck(int currTemp){
           changeStatus = true;
         }else if(changePeriod == true and (tSet + upRampTemp) >= soakTemp){
           currState = cookState::SOAK;
-          currPhase = "Soaking";
           currStateStart = currTime;
           startPeriod = period;
           changeStatus = true;
@@ -193,7 +191,6 @@ void stateCheck(int currTemp){
         tSet = soakTemp;
         if(changePeriod == true and (period - startPeriod) > soakPeriod){
           currState = cookState::DOWNRAMP;
-          currPhase = "DownRamp";
           currStateStart = currTime;
           startPeriod = period;
           changeStatus = true;
@@ -206,7 +203,6 @@ void stateCheck(int currTemp){
           changeStatus = true;
         }else if(changePeriod == true and (tSet - downRampTemp) <= warmupTemp){
           currState = cookState::DONE;
-          currPhase = "Done";
           currStateStart = currTime;
           startPeriod = period;
           changeStatus = true;
@@ -219,8 +215,9 @@ void stateCheck(int currTemp){
         break;
 
       default:
-        currState = cookState::DONE;
-        currPhase = "SwitchError";
+        currState = cookState::ERRORSTATE;
+        tSet = 0;
+        changeStatus = false;
         debugln("'Default' Switch Case reached - Error");        
    }
 
@@ -243,12 +240,11 @@ void stateCheck(int currTemp){
 
    //log/screen print if anything has changed
    if(changeStatus){
-     writeData(currPhase, period, tSet, powerStatus, tempStatus, currTime);
+     writeData(int(currState), period, tSet, powerStatus, tempStatus, currTime);
      changeStatus = false;
-   }   
-        
+   }
    
-   if(floor((currTime - startTime)/pCount) >= period and currState>cookState::WARMUP){
+  if(floor((currTime - startTime)/pCount) >= period and currState>cookState::WARMUP){
      period += 1;
      changePeriod = true;
      changeStatus = true;
@@ -257,7 +253,7 @@ void stateCheck(int currTemp){
    }
 }
 
-void printData(String currPhase, long period, int tSet, String power, int temp, unsigned long currTime){
+void printData(char currPhase[], long period, int tSet, char power[], int temp, unsigned long currTime){
   debug("_time:");
   debug(currTime);
   debug("|phase:");
@@ -272,8 +268,7 @@ void printData(String currPhase, long period, int tSet, String power, int temp, 
   debugln(temp);  
 } 
 
-void printScreenData(String currPhase, long period, int tSet, String power, int temp){
-
+void printScreenData(char currPhase[], long period, int tSet, char power[], int temp){
    //clear display
   displayclear;
   displaysettextsize(1);
@@ -306,11 +301,11 @@ void printScreenData(String currPhase, long period, int tSet, String power, int 
   displaydisplay;
 }
 
-void writeData(String currPhase, long period, int tSet, bool power, int temp, unsigned long currTime){
-    String powerStatus = "Off";
-    if(power == 1){
-      powerStatus="On";
-    }    
-    printScreenData(currPhase, period, tSet, powerStatus, temp);
-    printData(currPhase, period, tSet, powerStatus, temp, currTime);
+void writeData(int currPhase, long period, int tSet, bool power, int temp, unsigned long currTime){
+    char* powerStatus[] = {"Off", "On"};
+    
+    char* phaseStatus[] = {"WarmUp", "WarmSoak", "UpRamp", "Soak", "DownRamp", "Done", "Error"};
+        
+    printScreenData(phaseStatus[currPhase], period, tSet, powerStatus[power], temp);
+    printData(phaseStatus[currPhase], period, tSet, powerStatus[power], temp, currTime);
 }
