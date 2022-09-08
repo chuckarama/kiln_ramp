@@ -18,9 +18,12 @@ A seperate version "kiln_ramp_2" represents a more versatile (albeit more verbos
 Changelog:
 ----------
 
+20220907
+- _2 Removed String datatype for space savings and stabilized flakey variable values
+
 20220905
 - Added second version "kiln_ramp_2" (see description above)
-- _2 added OLED support
+- _2 Added OLED support
 - _2 Enable/Disable Serial Monitor
 - _2 Enable/Disable OLED dispaly0
 - _2 Added more versatile state management scheme
