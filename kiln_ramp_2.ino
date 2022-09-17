@@ -24,6 +24,9 @@ MAX6675 thermocouple(thermoCLK, thermoCS, thermoDO);
 #define soakPeriod 5
 //downRampTemp is the temperature decrement per period for cooldown.  Some kilns/ovens cool faster than others and this can control a steady and slow cool down.
 #define downRampTemp 20
+// Temp Tolerance range as a percent (5 = 5%) Measuring moving average temp causes necessary lag in the reading.  This means temperature overshot of tSet regularly happens.
+// This setting can better ease the device into the final temperature.  Set to 0 if its not an issue for you.
+#define tempTolerance 2
 
 //Create period length (3600000UL = 1hr)
 #define pCount 3600000UL
@@ -110,7 +113,9 @@ int readAvgTemp(){
   
   unsigned long currTime = millis();
   static double mov_avg = 0;
+  static int return_avg = 0;
   static unsigned long readMillis = currTime;
+  static unsigned long returnMillis = currTime;
 
     if (currTime - readMillis >= 250) {
         const double mov_avg_alpha = 0.1;
@@ -127,7 +132,11 @@ int readAvgTemp(){
         readMillis = currTime;
     }
   
-  return round(mov_avg);
+  if (currTime - returnMillis >= 5000) {
+     return_avg = round(mov_avg);
+  }
+  
+  return return_avg;
 }
 
 void stateCheck(int currTemp){
@@ -222,7 +231,7 @@ void stateCheck(int currTemp){
    }
 
    //Turn on or off the kiln power based on the current temp vs the set temp
-   if(currTemp<tSet){
+   if(currTemp<round(tSet-tSet*tempTolerance/100)){
       digitalWrite(pwr,HIGH);
    }else{
       digitalWrite(pwr,LOW); 
