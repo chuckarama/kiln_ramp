@@ -208,7 +208,7 @@ void stateCheck(int currTemp){
         break;
 
       case cookState::DOWNRAMP:
-        if(changePeriod == true and (tSet - upRampTemp) > warmupTemp){
+        if(changePeriod == true and (tSet - downRampTemp) > warmupTemp){
           tSet -= downRampTemp;
           changeStatus = true;
         }else if(changePeriod == true and (tSet - downRampTemp) <= warmupTemp){
