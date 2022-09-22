@@ -134,6 +134,7 @@ int readAvgTemp(){
   
   if (currTime - returnMillis >= 5000) {
      return_avg = round(mov_avg);
+     returnMillis = currTime;
   }
   
   return return_avg;
